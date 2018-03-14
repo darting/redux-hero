@@ -29,3 +29,5 @@ export function levelReducer(state: HeroState, action: ActionTypes) {
         default: return state;
     }
 } 
+
+export const store = createStore(levelReducer);
