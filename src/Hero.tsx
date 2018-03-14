@@ -21,8 +21,8 @@ export interface LevelUpAction {
 export type ActionTypes =
     | LevelUpAction
 
-    
-export function counterReducer(state: HeroState, action: ActionTypes) {
+
+export function levelReducer(state: HeroState, action: ActionTypes) {
     switch (action.type) {
         case ActionTypeKeys.LEVEL_UP:
             return { level: state.level + 1 };
