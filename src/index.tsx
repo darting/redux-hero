@@ -6,12 +6,16 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { App } from './App';
 
+
+
 const root = document.getElementById('root');
 const render = (Component: typeof App) =>
     ReactDOM.render(
-        <AppContainer>
-            <Component />
-        </AppContainer>,
+        <Provider>
+            <AppContainer>
+                <Component />
+            </AppContainer>
+        </Provider>,
         root
     );
 
