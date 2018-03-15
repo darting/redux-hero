@@ -5,7 +5,7 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { App } from './App';
-import { store } from './Hero';
+import { store, move, takeDamage, drinkPotion, gainXp, levelUp } from './Hero';
 
 
 const root = document.getElementById('root');
@@ -28,11 +28,10 @@ store.subscribe(() => {
     console.log(store.getState());
 });
 
-store.dispatch({ type: 'LEVEL_UP' });
-store.dispatch({ type: 'MOVE', payload: { x: 10, y: 12 } });
-store.dispatch({ type: 'MOVE', payload: { x: 20, y: 1 } });
-store.dispatch({ type: 'LEVEL_UP' });
-store.dispatch({ type: 'DRINK_POTION' });
-store.dispatch({ type: 'TAKE_DAMAGE', payload: 13 });
-store.dispatch({ type: 'GAIN_XP', payload: 100 });
+store.dispatch(move(1, 0));
+store.dispatch(move(1, 1));
+store.dispatch(takeDamage(13));
+store.dispatch(drinkPotion());
+store.dispatch(gainXp(100));
+store.dispatch(levelUp());
 

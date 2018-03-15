@@ -4,25 +4,33 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
+import { createAction, handleActions, combineActions } from 'redux-actions';
+
 
 export interface Position { x: number, y: number }
 export interface Stats { health: number, maxHealth: number }
 export interface Inventory { potions: number }
 
-export interface HeroState {
-    xp: number,
-    level: number,
-    position: Position,
-    stats: Stats,
-    inventory: Inventory
+export interface State {
+    hero: {
+        xp: number,
+        level: number,
+        position: Position,
+        stats: Stats,
+        inventory: Inventory
+    },
+    monster: any
 }
 
-export const initialState: HeroState = {
-    xp: 0,
-    level: 1,
-    position: { x: 0, y: 0 },
-    stats: { health: 50, maxHealth: 50 },
-    inventory: { potions: 1 }
+export const initialState: State = {
+    hero: {
+        xp: 0,
+        level: 1,
+        position: { x: 0, y: 0 },
+        stats: { health: 50, maxHealth: 50 },
+        inventory: { potions: 1 }
+    },
+    monster: {},
 };
 
 export enum ActionTypeKeys {
@@ -48,47 +56,58 @@ export type Actions =
     | TakeDamageAction
 
 
-const xpReducer = (state = initialState.xp, action: Actions) => {
+/// actions
+export const gainXp = createAction<number>(ActionTypeKeys.GAIN_XP);
+export const levelUp = createAction(ActionTypeKeys.LEVEL_UP);
+export const move = createAction<Position, number, number>(ActionTypeKeys.MOVE, (x: number, y: number) => ({ x, y }));
+export const drinkPotion = createAction(ActionTypeKeys.DRINK_POTION);
+export const takeDamage = createAction<number>(ActionTypeKeys.TAKE_DAMAGE);
+
+
+/// reducers    
+const heroReducer = (state = initialState.hero, action: Actions) => {
+    const { stats, inventory } = state;
     switch (action.type) {
         case ActionTypeKeys.GAIN_XP:
-            return state + action.payload;
-        default: return state;
-    }
-}
-
-const levelReducer = (state = initialState.level, action: Actions) => {
-    switch (action.type) {
+            const xp = state.xp + action.payload;
+            return { ...state, xp };
         case ActionTypeKeys.LEVEL_UP:
-            return state + 1;
-        default: return state;
-    }
-}
-
-const positionReducer = (state = initialState.position, action: Actions) => {
-    switch (action.type) {
+            const level = state.level + 1;
+            return { ...state, level };
         case ActionTypeKeys.MOVE:
-            let { x, y } = action.payload;
-            x += state.x;
-            y += state.y;
-            return { x, y };
-        default: return state;
+            let { position: { x, y } } = state;
+            x += action.payload.x;
+            y += action.payload.y;
+            return { ...state, position: { x, y } };
+        case ActionTypeKeys.DRINK_POTION:
+            return {
+                ...state,
+                stats: statsReducer(stats, action),
+                inventory: inventoryReducer(inventory, action)
+            };
+        case ActionTypeKeys.TAKE_DAMAGE:
+            return {
+                ...state,
+                stats: statsReducer(stats, action)
+            };
     }
-}
+    return state;
+};
 
-const statsReducer = (state = initialState.stats, action: Actions) => {
+const statsReducer = (state = initialState.hero.stats, action: Actions) => {
     let { health, maxHealth } = state;
     switch (action.type) {
         case ActionTypeKeys.DRINK_POTION:
             health = Math.min(health + 20, maxHealth);
-            return { ...state, health, maxHealth };
+            return { ...state, health };
         case ActionTypeKeys.TAKE_DAMAGE:
             health = Math.max(0, health - action.payload);
             return { ...state, health };
         default: return state;
     }
-}
+};
 
-const inventoryReducer = (state = initialState.inventory, action: Actions) => {
+const inventoryReducer = (state = initialState.hero.inventory, action: Actions) => {
     let { potions } = state;
     switch (action.type) {
         case ActionTypeKeys.DRINK_POTION:
@@ -96,14 +115,15 @@ const inventoryReducer = (state = initialState.inventory, action: Actions) => {
             return { ...state, potions };
         default: return state;
     }
-}
+};
+
+const monsterReducer = (state = initialState.monster, action: Actions) => {
+    return state;
+};
 
 const reducer = combineReducers({
-    xp: xpReducer,
-    level: levelReducer,
-    position: positionReducer,
-    stats: statsReducer,
-    inventory: inventoryReducer,
+    hero: heroReducer,
+    monster: monsterReducer,
 });
 
 export const store = createStore(reducer, initialState);
