@@ -33,11 +33,11 @@ export enum ActionTypeKeys {
     TAKE_DAMAGE = 'TAKE_DAMAGE',
 }
 
-export interface GainXPAction { type: ActionTypeKeys.GAIN_XP, by: number }
+export interface GainXPAction { type: ActionTypeKeys.GAIN_XP, payload: number }
 export interface LevelUpAction { type: ActionTypeKeys.LEVEL_UP }
-export interface MoveAction { type: ActionTypeKeys.MOVE, by: Position }
+export interface MoveAction { type: ActionTypeKeys.MOVE, payload: Position }
 export interface DrinkPotionAction { type: ActionTypeKeys.DRINK_POTION }
-export interface TakeDamageAction { type: ActionTypeKeys.TAKE_DAMAGE, by: number }
+export interface TakeDamageAction { type: ActionTypeKeys.TAKE_DAMAGE, payload: number }
 
 
 export type Actions =
@@ -51,7 +51,7 @@ export type Actions =
 const xpReducer = (state = initialState.xp, action: Actions) => {
     switch (action.type) {
         case ActionTypeKeys.GAIN_XP:
-            return state + action.by;
+            return state + action.payload;
         default: return state;
     }
 }
@@ -67,7 +67,7 @@ const levelReducer = (state = initialState.level, action: Actions) => {
 const positionReducer = (state = initialState.position, action: Actions) => {
     switch (action.type) {
         case ActionTypeKeys.MOVE:
-            let { x, y } = action.by;
+            let { x, y } = action.payload;
             x += state.x;
             y += state.y;
             return { x, y };
@@ -82,7 +82,7 @@ const statsReducer = (state = initialState.stats, action: Actions) => {
             health = Math.min(health + 20, maxHealth);
             return { ...state, health, maxHealth };
         case ActionTypeKeys.TAKE_DAMAGE:
-            health = Math.max(0, health - action.by);
+            health = Math.max(0, health - action.payload);
             return { ...state, health };
         default: return state;
     }
