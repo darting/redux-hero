@@ -5,6 +5,7 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import { createAction, handleActions, combineActions } from 'redux-actions';
+import { createSelector } from 'reselect';
 
 
 export interface Position { x: number, y: number }
@@ -21,6 +22,14 @@ export interface State {
     },
     monster: any
 }
+
+const levels = [
+    { xp: 0, maxHealth: 50 },
+    { xp: 100, maxHealth: 55 },
+    { xp: 250, maxHealth: 60 },
+    { xp: 500, maxHealth: 67 },
+    { xp: 1000, maxHealth: 75 },
+];
 
 export const initialState: State = {
     hero: {
@@ -55,6 +64,12 @@ export type Actions =
     | DrinkPotionAction
     | TakeDamageAction
 
+/// selectors    
+const getXp = (state : State) => state.hero.xp;
+const getHealth = (state : State) => state.hero.stats.health;
+const getLevel = createSelector(getXp, xp => levels.filter(level => xp >= level.xp).length);
+const getMaxHealth = createSelector(getLevel, level => levels[level].maxHealth);
+const isHealthLow = createSelector([ getHealth, getMaxHealth ], (health, maxHealth) => health < maxHealth * 0.15);
 
 /// actions
 export const gainXp = createAction<number>(ActionTypeKeys.GAIN_XP);
