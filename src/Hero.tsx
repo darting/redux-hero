@@ -6,6 +6,8 @@ import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import { createAction, handleActions, combineActions } from 'redux-actions';
 import { createSelector } from 'reselect';
+import { call, put, takeEvery, takeLatest, race, take, select } from 'redux-saga/effects';
+import { delay } from 'redux-saga';
 
 
 export interface Position { x: number, y: number }
@@ -142,3 +144,77 @@ const reducer = combineReducers({
 });
 
 export const store = createStore(reducer, initialState);
+
+
+export async function gameSaga() {
+    let playerAlive = true;
+    while (playerAlive) {
+        await take(ActionTypeKeys.MOVE);
+
+        const location = await select(getLocation);
+        if (location.safe) continue;
+
+        const monsterProbability = await call(Math.random);
+        if (monsterProbability < location.encounterThreshold) continue;
+
+        playerAlive = await call(fightSaga);
+    }
+}
+
+export async function fightSaga() {
+    const monster = await select(getMonster);
+
+    while (true) {
+        await call(monsterAttackSaga, monster);
+
+        const playerHealth = await select(getHealth);
+        if (playerHealth <= 0) return false;
+
+        await call(playerFightOptionsSaga);
+
+        const mosnterHealth = await select(getMonsterHealth);
+        if (mosnterHealth <= 0) return true;
+    }
+}
+
+export async function monsterAttackSaga(monster) {
+    await call(delay, 1000);
+
+    let damage = monster.strength;
+    const critProbability = await call(Math.random);
+    if (critProbability >= monster.critThreshold) damage *= 2;
+
+    await put(animateMonsterAttack(damage));
+    await call(delay, 1000);
+
+    await put(takeDamage(damage));
+}
+
+export async function playerFightOptionsSaga() {
+    const { attack, heal, escape } = await race({
+        attack: take(ActionTypeKeys.ATTACK),
+        heal, take(ActionTypeKeys.DRINK_POTION),
+        escape: take(ActionTypeKeys.RUN_AWAY),
+    });
+
+    if (attack) await call(playerAttackSaga);
+    if (heal) await call(playerHealSaga);
+    if (escape) await call(playerEscapeSaga);
+}
+
+export async function metaSaga() {
+    while (true) {
+        await race({
+            play: call(gameSaga),
+            load: take(ActionTypeKeys.LOAD_GAME),
+        })
+    }
+}
+
+/// redux-saga
+/// take : to wait for an action
+/// select : to access state
+/// call : to call a function or another saga
+/// delay : to delay execution
+/// put : to dispatch an antion
+/// race : to wait for the first completion from a set of effects
