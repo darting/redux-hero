@@ -32,3 +32,7 @@ store.dispatch({ type: 'LEVEL_UP' });
 store.dispatch({ type: 'MOVE', by: { x: 10, y: 12 } });
 store.dispatch({ type: 'MOVE', by: { x: 20, y: 1 } });
 store.dispatch({ type: 'LEVEL_UP' });
+store.dispatch({ type: 'DRINK_POTION' });
+store.dispatch({ type: 'TAKE_DAMAGE', by: 13 });
+store.dispatch({ type: 'GAIN_XP', by: 100 });
+

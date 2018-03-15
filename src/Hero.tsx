@@ -40,7 +40,7 @@ export interface DrinkPotionAction { type: ActionTypeKeys.DRINK_POTION }
 export interface TakeDamageAction { type: ActionTypeKeys.TAKE_DAMAGE, by: number }
 
 
-export type ActionTypes =
+export type Actions =
     | GainXPAction
     | LevelUpAction
     | MoveAction
@@ -48,7 +48,15 @@ export type ActionTypes =
     | TakeDamageAction
 
 
-export const levelReducer = (state = initialState.level, action: ActionTypes) => {
+const xpReducer = (state = initialState.xp, action: Actions) => {
+    switch (action.type) {
+        case ActionTypeKeys.GAIN_XP:
+            return state + action.by;
+        default: return state;
+    }
+}
+
+const levelReducer = (state = initialState.level, action: Actions) => {
     switch (action.type) {
         case ActionTypeKeys.LEVEL_UP:
             return state + 1;
@@ -56,7 +64,7 @@ export const levelReducer = (state = initialState.level, action: ActionTypes) =>
     }
 }
 
-export const positionReducer = (state = initialState.position, action: ActionTypes) => {
+const positionReducer = (state = initialState.position, action: Actions) => {
     switch (action.type) {
         case ActionTypeKeys.MOVE:
             let { x, y } = action.by;
@@ -67,9 +75,35 @@ export const positionReducer = (state = initialState.position, action: ActionTyp
     }
 }
 
+const statsReducer = (state = initialState.stats, action: Actions) => {
+    let { health, maxHealth } = state;
+    switch (action.type) {
+        case ActionTypeKeys.DRINK_POTION:
+            health = Math.min(health + 20, maxHealth);
+            return { ...state, health, maxHealth };
+        case ActionTypeKeys.TAKE_DAMAGE:
+            health = Math.max(0, health - action.by);
+            return { ...state, health };
+        default: return state;
+    }
+}
+
+const inventoryReducer = (state = initialState.inventory, action: Actions) => {
+    let { potions } = state;
+    switch (action.type) {
+        case ActionTypeKeys.DRINK_POTION:
+            potions = Math.max(0, potions - 1);
+            return { ...state, potions };
+        default: return state;
+    }
+}
+
 const reducer = combineReducers({
+    xp: xpReducer,
     level: levelReducer,
-    position: positionReducer
+    position: positionReducer,
+    stats: statsReducer,
+    inventory: inventoryReducer,
 });
 
-export const store = createStore(reducer);
+export const store = createStore(reducer, initialState);
